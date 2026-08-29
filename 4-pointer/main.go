@@ -30,19 +30,19 @@ var conversionRates = map[string]map[string]float64{
 	},
 }
 
-func validateCurrency(currency *string) bool {
+func validateCurrency(currency *string, rates *map[string]map[string]float64) bool {
 	*currency = strings.ToUpper(*currency)
 
-	_, exists := conversionRates[*currency]
+	_, exists := (*rates)[*currency]
 	return exists
 }
 
-func getCurrencyInput(prompt string, currency *string) {
+func getCurrencyInput(prompt string, currency *string, rates *map[string]map[string]float64) {
 	for {
 		fmt.Print(prompt + " (USD/EUR/RUB): ")
 		fmt.Scanf("%s", currency)
 
-		if validateCurrency(currency) {
+		if validateCurrency(currency, rates) {
 			return
 		}
 
@@ -68,8 +68,14 @@ func getAmountInput(amount *float64) {
 	}
 }
 
-func convertCurrency(amount *float64, fromCurrency, toCurrency *string, result *float64) {
-	rate := conversionRates[*fromCurrency][*toCurrency]
+func convertCurrency(
+	amount *float64,
+	fromCurrency *string,
+	toCurrency *string,
+	rates *map[string]map[string]float64,
+	result *float64,
+) {
+	rate := (*rates)[*fromCurrency][*toCurrency]
 	*result = *amount * rate
 }
 
@@ -83,7 +89,7 @@ func main() {
 	var result float64
 
 	fmt.Println("Шаг 1: Выберите исходную валюту")
-	getCurrencyInput("Исходная валюта", &fromCurrency)
+	getCurrencyInput("Исходная валюта", &fromCurrency, &conversionRates)
 
 	fmt.Println()
 	fmt.Println("Шаг 2: Введите сумму для конвертации")
@@ -91,10 +97,10 @@ func main() {
 
 	fmt.Println()
 	fmt.Println("Шаг 3: Выберите целевую валюту")
-	getCurrencyInput("Целевая валюта", &toCurrency)
+	getCurrencyInput("Целевая валюта", &toCurrency, &conversionRates)
 
 	fmt.Println()
-	convertCurrency(&amount, &fromCurrency, &toCurrency, &result)
+	convertCurrency(&amount, &fromCurrency, &toCurrency, &conversionRates, &result)
 
 	fmt.Printf("Результат: %.2f %s = %.2f %s\n", amount, fromCurrency, result, toCurrency)
 }
