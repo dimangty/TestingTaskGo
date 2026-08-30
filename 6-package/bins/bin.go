@@ -5,18 +5,18 @@ import "time"
 
 // Bin describes a bin.
 type Bin struct {
-	id        string
-	private   bool
-	createdAt time.Time
-	name      string
+	ID        string    `json:"id"`
+	Private   bool      `json:"private"`
+	CreatedAt time.Time `json:"createdAt"`
+	Name      string    `json:"name"`
 }
 
 // NewBin creates a bin with the current time as its creation time.
 func NewBin(id string, private bool, name string) Bin {
 	return Bin{
-		id:        id,
-		private:   private,
-		createdAt: time.Now(),
-		name:      name,
+		ID:        id,
+		Private:   private,
+		CreatedAt: time.Now(),
+		Name:      name,
 	}
 }

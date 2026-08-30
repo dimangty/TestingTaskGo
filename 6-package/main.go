@@ -2,9 +2,13 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"module-name/bins"
+	"module-name/storage"
 )
+
+const storagePath = "bins.json"
 
 func main() {
 	bin1 := bins.NewBin(
@@ -19,10 +23,20 @@ func main() {
 		"My public bin",
 	)
 
-	binList := bins.NewBinList([]bins.Bin{
-		bin1,
-		bin2,
-	})
+	if err := storage.SaveBin(storagePath, bin1); err != nil {
+		log.Fatal(err)
+	}
+
+	if err := storage.SaveBin(storagePath, bin2); err != nil {
+		log.Fatal(err)
+	}
+
+	storedBins, err := storage.ReadBins(storagePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	binList := bins.NewBinList(storedBins)
 
 	fmt.Println(bin1)
 	fmt.Println(bin2)
