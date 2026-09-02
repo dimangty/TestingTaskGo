@@ -132,8 +132,7 @@ func (client *Client) Create(ctx context.Context, document []byte, name string) 
 	}, nil
 }
 
-// Get downloads a bin by ID. The returned document includes the record and
-// metadata exactly as returned by JSONBin.io.
+// Get downloads a bin by ID and returns the stored JSON document.
 func (client *Client) Get(ctx context.Context, id string) ([]byte, error) {
 	request, err := client.requestForID(ctx, http.MethodGet, id, nil)
 	if err != nil {
@@ -144,7 +143,18 @@ func (client *Client) Get(ctx context.Context, id string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("get bin: %w", err)
 	}
-	return responseBody, nil
+
+	var response struct {
+		Record json.RawMessage `json:"record"`
+	}
+	if err := json.Unmarshal(responseBody, &response); err != nil {
+		return nil, fmt.Errorf("get bin: decode response: %w", err)
+	}
+	if len(response.Record) == 0 {
+		return nil, errors.New("get bin: response does not contain a record")
+	}
+
+	return response.Record, nil
 }
 
 // Update replaces the JSON document stored in a bin.

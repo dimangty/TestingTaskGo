@@ -91,8 +91,12 @@ func TestGetUpdateAndDeleteUseBinRoute(t *testing.T) {
 		return jsonResponse(http.StatusOK, `{"record":{"value":2},"metadata":{"id":"bin-id"}}`), nil
 	}))
 
-	if _, err := client.Get(context.Background(), "bin-id"); err != nil {
+	record, err := client.Get(context.Background(), "bin-id")
+	if err != nil {
 		t.Fatalf("Get() error = %v", err)
+	}
+	if got, want := string(record), `{"value":2}`; got != want {
+		t.Fatalf("Get() = %s, want record %s", got, want)
 	}
 	if _, err := client.Update(context.Background(), "bin-id", []byte(`{"value":2}`)); err != nil {
 		t.Fatalf("Update() error = %v", err)
@@ -102,6 +106,28 @@ func TestGetUpdateAndDeleteUseBinRoute(t *testing.T) {
 	}
 	if requestIndex != len(wantedMethods) {
 		t.Fatalf("request count = %d, want %d", requestIndex, len(wantedMethods))
+	}
+}
+
+func TestGetRejectsResponseWithoutRecord(t *testing.T) {
+	client := testClient(httpClientFunc(func(*http.Request) (*http.Response, error) {
+		return jsonResponse(http.StatusOK, `{"metadata":{"id":"bin-id"}}`), nil
+	}))
+
+	_, err := client.Get(context.Background(), "bin-id")
+	if err == nil || !strings.Contains(err.Error(), "does not contain a record") {
+		t.Fatalf("Get() error = %v, want missing record error", err)
+	}
+}
+
+func TestGetRejectsMalformedResponse(t *testing.T) {
+	client := testClient(httpClientFunc(func(*http.Request) (*http.Response, error) {
+		return jsonResponse(http.StatusOK, `{"record":`), nil
+	}))
+
+	_, err := client.Get(context.Background(), "bin-id")
+	if err == nil || !strings.Contains(err.Error(), "decode response") {
+		t.Fatalf("Get() error = %v, want decode response error", err)
 	}
 }
 
